@@ -122,8 +122,14 @@ func (c *Client) Write(bp BatchPoints) (*Response, error) {
 
 	var b bytes.Buffer
 	for _, p := range bp.Points {
-		if _, err := b.WriteString(p.MarshalString()); err != nil {
-			return nil, err
+		if p.Raw != "" {
+			if _, err := b.WriteString(p.Raw); err != nil {
+				return nil, err
+			}
+		} else {
+			if _, err := b.WriteString(p.MarshalString()); err != nil {
+				return nil, err
+			}
 		}
 
 		if err := b.WriteByte('\n'); err != nil {
@@ -135,7 +141,7 @@ func (c *Client) Write(bp BatchPoints) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "text/plain")
 	req.Header.Set("User-Agent", c.userAgent)
 	if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
@@ -334,6 +340,7 @@ type Point struct {
 	Time        time.Time
 	Fields      map[string]interface{}
 	Precision   string
+	Raw         string
 }
 
 // MarshalJSON will format the time in RFC3339Nano
